@@ -5,6 +5,42 @@ import supabase from '../lib/supabaseInstance';
 import MainNav from '../components/MainNav';
 import { FaShip, FaPlane, FaTruck, FaTrain, FaFileAlt, FaDownload, FaBox, FaCube, FaImage, FaFile, FaFilePdf, FaFileWord, FaFileExcel, FaSearch, FaArrowLeft, FaChevronUp, FaChevronDown, FaEye } from 'react-icons/fa';
 
+const styles = `
+  @keyframes scroll {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .marquee-wrapper {
+    width: 100%;
+    overflow: hidden;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .marquee {
+    display: inline-block;
+    white-space: nowrap;
+    padding: 0.75rem 0;
+    animation: marquee 20s linear infinite;
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+`;
+
 const TrackNewPage: NextPage = () => {
   const [trackingId, setTrackingId] = useState('');
   const [shipment, setShipment] = useState(null);
@@ -246,21 +282,21 @@ const TrackNewPage: NextPage = () => {
 
   // Define shipment stages
   const SHIPMENT_STAGES = [
-    'Product Insurance Completed',
-    'Supplier Payment Processed',
-    'Awaiting Packaging Approval from Customer',
-    'Pickup Completed at Origin',
+    'Product Insurance',
+    'Supplier Payment',
+    'Packaging Approval from Customer',
+    'Pickup at Origin',
     'In Transit to India',
-    'Pending Customer Clearance',
-    'Customs Clearance Completed',
-    'Dispatched to Befach Warehouse',
-    'Dispatched to Customer Warehouse'
+    'Customs Clearance',
+    'Dispatch to Befach Warehouse',
+    'Dispatch to Customer Warehouse'
   ];
 
   return (
     <>
       <Head>
         <title>Track Your Shipment | ShipTrack</title>
+        <style jsx global>{styles}</style>
       </Head>
       
       <MainNav />
@@ -302,6 +338,15 @@ const TrackNewPage: NextPage = () => {
         ) : (
           // Show shipment details when a shipment is found
           <>
+            {shipment.shipment_notes && (
+              <div className="mb-6 bg-red-50 border-2 border-red-500 rounded-lg p-4">
+                <div className="flex items-center">
+                  <span className="text-red-600 font-medium text-lg">Important Note: </span>
+                  <span className="text-red-500 text-lg ml-2">{shipment.shipment_notes}</span>
+                </div>
+              </div>
+            )}
+            
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Shipment #{shipment.tracking_id}</h1>
@@ -389,19 +434,41 @@ const TrackNewPage: NextPage = () => {
                         <h4 className="text-sm text-gray-600">Dimensions</h4>
                         <p className="font-medium">{shipment.dimensions || 'N/A'}</p>
                       </div>
-                      
+
                       <div>
-                        <h4 className="text-sm text-gray-600">Declared Value</h4>
-                        <p className="font-medium">{shipment.declared_value ? `$${shipment.declared_value}` : 'N/A'}</p>
+                        <h4 className="text-sm text-gray-600">HS Code</h4>
+                        <p className="font-medium">{shipment.hs_code || 'N/A'}</p>
                       </div>
                     </div>
 
-                    {shipment.contents && (
-                      <div className="mb-4">
-                        <h4 className="text-sm text-gray-600">Package Contents</h4>
-                        <p className="font-medium">{shipment.contents}</p>
+                    <div className="mb-6">
+                      <h4 className="text-sm text-gray-600">Package Contents</h4>
+                      <p className="font-medium">{shipment.contents}</p>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div className="border-t pt-4 mt-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Contact Information</h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <h5 className="text-sm text-gray-600">Shipper</h5>
+                          <p className="font-medium">{shipment.shipper_name || 'N/A'}</p>
+                          <p className="text-sm text-gray-500">{shipment.shipper_address || 'N/A'}</p>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-sm text-gray-600">Buyer</h5>
+                          <p className="font-medium">{shipment.buyer_name || 'N/A'}</p>
+                          <p className="text-sm text-gray-500">{shipment.buyer_address || 'N/A'}</p>
+                        </div>
                       </div>
-                    )}
+
+                      <div>
+                        <h5 className="text-sm text-gray-600">Delivery Address</h5>
+                        <p className="text-sm text-gray-500">{shipment.customer_delivery_address || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -412,7 +479,12 @@ const TrackNewPage: NextPage = () => {
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                   <div className="p-6">
                     <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-lg font-medium">Shipment Timeline</h3>
+                      <div>
+                        <h3 className="text-lg font-medium">Shipment Timeline</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Progress: {Math.round((currentStageIndex / (SHIPMENT_STAGES.length - 1)) * 100)}% Complete
+                        </p>
+                      </div>
                       <button 
                         onClick={() => setShowFullTimeline(!showFullTimeline)}
                         className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
@@ -420,6 +492,15 @@ const TrackNewPage: NextPage = () => {
                         <FaEye className="mr-1" />
                         {showFullTimeline ? 'Show Less' : 'View Full Timeline'}
                       </button>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-[#F39C12] h-2.5 rounded-full transition-all duration-500" 
+                          style={{ width: `${(currentStageIndex / (SHIPMENT_STAGES.length - 1)) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
                     
                     <div className="space-y-6" ref={timelineRef}>
@@ -496,6 +577,27 @@ const TrackNewPage: NextPage = () => {
                                 <p className={`text-sm ${
                                   isPending ? 'text-gray-400' : 'text-gray-500'
                                 }`}>{stageDate}</p>
+                                {/* Show dispatched through info for each relevant stage */}
+                                {stage === 'Pickup at Origin' && shipment.pickup_dispatched_through && (
+                                  <p className="text-sm text-blue-600 mt-1">
+                                    Dispatched through: {shipment.pickup_dispatched_through}
+                                  </p>
+                                )}
+                                {stage === 'In Transit to India' && shipment.transit_dispatched_through && (
+                                  <p className="text-sm text-blue-600 mt-1">
+                                    Dispatched through: {shipment.transit_dispatched_through}
+                                  </p>
+                                )}
+                                {stage === 'Dispatch to Befach Warehouse' && shipment.befach_dispatched_through && (
+                                  <p className="text-sm text-blue-600 mt-1">
+                                    Dispatched through: {shipment.befach_dispatched_through}
+                                  </p>
+                                )}
+                                {stage === 'Dispatch to Customer Warehouse' && shipment.customer_dispatched_through && (
+                                  <p className="text-sm text-blue-600 mt-1">
+                                    Dispatched through: {shipment.customer_dispatched_through}
+                                  </p>
+                                )}
                               </div>
                             </div>
                             

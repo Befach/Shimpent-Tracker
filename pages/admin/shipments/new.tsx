@@ -4,6 +4,7 @@ import ClientOnlyAdmin from '../../../components/ClientOnlyAdmin';
 import supabase from '../../../lib/supabaseInstance';
 import { useAuth } from '../../../contexts/AuthContext';
 import Link from 'next/link';
+import { PostgrestError } from '@supabase/supabase-js';
 
 // Define an interface for the stage
 interface ShipmentStage {
@@ -18,15 +19,15 @@ export default function NewShipment() {
   
   // Predefined stages as a constant
   const SHIPMENT_STAGES = [
-    'Product Insurance Completed',
-    'Supplier Payment Processed',
-    'Awaiting Packaging Approval from Customer',
-    'Pickup Completed at Origin',
+    'Product Insurance',
+    'Supplier Payment',
+    'Packaging Approval from Customer',
+    'Pickup at Origin',
     'In Transit to India',
     'Pending Customer Clearance',
-    'Customs Clearance Completed',
-    'Dispatched to Befach Warehouse',
-    'Dispatched to Customer Warehouse'
+    'Customs Clearance',
+    'Dispatch to Befach Warehouse',
+    'Dispatch to Customer Warehouse'
   ];
 
   const [formData, setFormData] = useState({
@@ -37,20 +38,35 @@ export default function NewShipment() {
     destination_country: '',
     current_city: '',
     current_country: '',
-    status: 'Product Insurance Completed', // Use 'status' instead of 'shipment_status'
+    status: 'Product Insurance Completed',
     transport_mode: 'Air',
     estimated_delivery: '',
     package_count: 1,
     package_type: '',
     weight: '',
     dimensions: '',
-    declared_value: '',
     contents: '',
+    pickup_dispatched_through: '',
+    transit_dispatched_through: '',
+    befach_dispatched_through: '',
+    customer_dispatched_through: '',
+    hs_code: '',
+    shipment_name: '',
+    customer_delivery_address: '',
+    shipment_notes: '',
+    shipper_name: '',
+    shipper_address: '',
+    buyer_name: '',
+    buyer_address: '',
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [success, setSuccess] = useState('');
+  const [showSuccessPage, setShowSuccessPage] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<{[key: string]: string}>({});
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
 
   // Test database connection on component mount
   useEffect(() => {
@@ -74,6 +90,22 @@ export default function NewShipment() {
     
     testConnection();
   }, []);
+
+  // Function to create preview URLs for files
+  const createFilePreview = (file: File) => {
+    const previewUrl = URL.createObjectURL(file);
+    setFilePreviews(prev => ({
+      ...prev,
+      [file.name]: previewUrl
+    }));
+  };
+
+  // Cleanup preview URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      Object.values(filePreviews).forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [filePreviews]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -111,33 +143,53 @@ export default function NewShipment() {
     }));
   };
 
+  // Update file selection handler
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setSelectedFiles(prevFiles => [...prevFiles, ...newFiles]);
+      // Create previews for new files
+      newFiles.forEach(file => createFilePreview(file));
+    }
+  };
+
+  // Function to remove a file
+  const removeFile = (fileName: string) => {
+    setSelectedFiles(prevFiles => prevFiles.filter(file => file.name !== fileName));
+    // Cleanup preview URL
+    if (filePreviews[fileName]) {
+      URL.revokeObjectURL(filePreviews[fileName]);
+      setFilePreviews(prev => {
+        const newPreviews = { ...prev };
+        delete newPreviews[fileName];
+        return newPreviews;
+      });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
+    setSuccess('');
 
     try {
-      // Create shipment object with only the fields we know exist in the database
-      interface ShipmentInsertData {
-        tracking_id: string;
-        origin_country: string;
-        origin_city: string;
-        destination_country: string;
-        destination_city: string;
-        current_location_country: string;
-        current_location_city: string;
-        status: string;
-        transport_mode: string;
-        estimated_delivery: string;
-        package_count?: number;
-        package_type?: string;
-        weight?: string;
-        dimensions?: string;
-        declared_value?: string;
-        contents?: string;
+      // Check for duplicate tracking ID
+      const { data: existingShipment, error: checkError } = await supabase
+        .from('shipments')
+        .select('id')
+        .eq('tracking_id', formData.tracking_id)
+        .single();
+
+      if (existingShipment) {
+        setError('A shipment with this tracking ID already exists');
+        setIsSubmitting(false);
+        return;
       }
+
+      console.log("Starting shipment creation...");
       
-      const shipmentToInsert: ShipmentInsertData = {
+      const shipmentToInsert = {
         tracking_id: formData.tracking_id,
         origin_country: formData.origin_country,
         origin_city: formData.origin_city,
@@ -148,83 +200,146 @@ export default function NewShipment() {
         status: formData.status,
         transport_mode: formData.transport_mode,
         estimated_delivery: formData.estimated_delivery,
+        pickup_dispatched_through: formData.pickup_dispatched_through,
+        transit_dispatched_through: formData.transit_dispatched_through,
+        befach_dispatched_through: formData.befach_dispatched_through,
+        customer_dispatched_through: formData.customer_dispatched_through,
+        hs_code: formData.hs_code,
+        shipment_name: formData.shipment_name,
+        customer_delivery_address: formData.customer_delivery_address,
+        shipment_notes: formData.shipment_notes,
+        shipper_name: formData.shipper_name,
+        shipper_address: formData.shipper_address,
+        buyer_name: formData.buyer_name,
+        buyer_address: formData.buyer_address,
+        package_count: formData.package_count,
+        package_type: formData.package_type,
+        weight: formData.weight,
+        dimensions: formData.dimensions,
+        contents: formData.contents
       };
-      
-      // Only add package fields if they're not empty
-      // This way if the schema doesn't have these fields, we won't try to insert them
-      if (formData.package_count) shipmentToInsert.package_count = formData.package_count;
-      if (formData.package_type) shipmentToInsert.package_type = formData.package_type;
-      if (formData.weight) shipmentToInsert.weight = formData.weight;
-      if (formData.dimensions) shipmentToInsert.dimensions = formData.dimensions;
-      if (formData.declared_value) shipmentToInsert.declared_value = formData.declared_value;
-      if (formData.contents) shipmentToInsert.contents = formData.contents;
-      
+
       console.log("Inserting shipment:", shipmentToInsert);
 
-      // Insert shipment
+      // Insert shipment with explicit headers
       const { data: shipmentData, error: shipmentError } = await supabase
         .from('shipments')
         .insert([shipmentToInsert])
-        .select();
+        .select()
+        .throwOnError();
 
       if (shipmentError) {
         console.error("Shipment creation error details:", {
-          message: shipmentError.message,
-          details: shipmentError.details,
-          hint: shipmentError.hint,
-          code: shipmentError.code
+          message: (shipmentError as PostgrestError).message,
+          details: (shipmentError as PostgrestError).details,
+          hint: (shipmentError as PostgrestError).hint,
+          code: (shipmentError as PostgrestError).code
         });
         throw shipmentError;
       }
 
       console.log("Shipment created successfully:", shipmentData);
 
-      // Handle file upload if a file is selected
-      if (selectedFile && shipmentData && shipmentData[0]?.id) {
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${shipmentData[0].id}_${Math.random()}.${fileExt}`;
-        const filePath = `${shipmentData[0].id}/${fileName}`;
+      // Handle file upload if files are selected
+      if (selectedFiles.length > 0 && shipmentData && shipmentData[0]?.id) {
+        const uploadedFilesList = [];
+        
+        for (const file of selectedFiles) {
+          try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+            const filePath = `shipment_documents/${shipmentData[0].id}/${fileName}`;
 
-        console.log("Uploading file:", filePath);
-
-        const { error: uploadError } = await supabase.storage
-          .from('shipment-media')
-          .upload(filePath, selectedFile);
-
-        if (uploadError) {
-          console.error('File upload error:', uploadError);
-        } else {
-          // Insert media record
-          await supabase
-            .from('shipment_media')
-            .insert({
-              shipment_id: shipmentData[0].id,
-              stage_name: formData.status,
-              file_path: filePath,
-              file_type: selectedFile.type
+            console.log('Uploading file:', {
+              fileName,
+              filePath,
+              fileType: file.type,
+              fileSize: file.size
             });
+
+            // Upload to storage
+            const { error: uploadError } = await supabase.storage
+              .from('shipment_files')
+              .upload(filePath, file);
+
+            if (uploadError) {
+              console.error('Storage upload error:', uploadError);
+              continue;
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+              .from('shipment_files')
+              .getPublicUrl(filePath);
+
+            // Save to database
+            const { data: fileData, error: dbError } = await supabase
+              .from('shipment_documents')
+              .insert({
+                shipment_id: shipmentData[0].id,
+                file_path: filePath,
+                file_type: file.type,
+                file_name: file.name,
+                file_size: file.size,
+                stage_name: formData.status,
+                public_url: publicUrl
+              })
+              .select()
+              .single();
+
+            if (dbError) {
+              console.error('Database error:', dbError);
+              // Try to delete the uploaded file
+              await supabase.storage
+                .from('shipment_files')
+                .remove([filePath]);
+            } else {
+              uploadedFilesList.push(fileData);
+            }
+          } catch (err) {
+            console.error('Error processing file:', err);
+          }
         }
+        
+        setUploadedFiles(uploadedFilesList);
       }
 
-      // Redirect to shipments list
-      router.push('/admin/shipments');
+      // Show success page
+      setShowSuccessPage(true);
+      
+      // Wait for 3 seconds then redirect
+      setTimeout(() => {
+        router.push('/admin/shipments');
+      }, 3000);
     } catch (err) {
       console.error('Shipment creation error:', err);
-      
-      // More detailed error logging
-      if (err instanceof Error) {
-        console.error('Error details:', {
-          message: err.message,
-          name: err.name,
-          stack: err.stack
-        });
-      }
-      
       setError(err.message || 'Failed to create shipment');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (showSuccessPage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              Shipment Created Successfully!
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Redirecting to shipments page...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ClientOnlyAdmin title="Add Shipment">
@@ -234,6 +349,12 @@ export default function NewShipment() {
         {error && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
             <p>{error}</p>
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
+            <p>{success}</p>
           </div>
         )}
         
@@ -412,6 +533,188 @@ export default function NewShipment() {
           </div>
           
           <div className="border-t pt-4 mt-6">
+            <h3 className="text-lg font-medium mb-3">Shipment Details</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label htmlFor="pickup_dispatched_through" className="block text-gray-700 font-medium mb-2">
+                  Pickup Dispatched Through
+                </label>
+                <input
+                  type="text"
+                  id="pickup_dispatched_through"
+                  name="pickup_dispatched_through"
+                  value={formData.pickup_dispatched_through || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. Blue Dart, FedEx, DHL"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="transit_dispatched_through" className="block text-gray-700 font-medium mb-2">
+                  Transit Dispatched Through
+                </label>
+                <input
+                  type="text"
+                  id="transit_dispatched_through"
+                  name="transit_dispatched_through"
+                  value={formData.transit_dispatched_through || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. Blue Dart, FedEx, DHL"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="befach_dispatched_through" className="block text-gray-700 font-medium mb-2">
+                  To Befach Warehouse Dispatched Through
+                </label>
+                <input
+                  type="text"
+                  id="befach_dispatched_through"
+                  name="befach_dispatched_through"
+                  value={formData.befach_dispatched_through || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. Blue Dart, FedEx, DHL"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="customer_dispatched_through" className="block text-gray-700 font-medium mb-2">
+                  To Customer Warehouse Dispatched Through
+                </label>
+                <input
+                  type="text"
+                  id="customer_dispatched_through"
+                  name="customer_dispatched_through"
+                  value={formData.customer_dispatched_through || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. Blue Dart, FedEx, DHL"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {isAdmin && (
+              <div className="mb-6">
+                <label htmlFor="shipment_name" className="block text-gray-700 font-medium mb-2">
+                  Shipment Name (Admin Only)
+                </label>
+                <input
+                  type="text"
+                  id="shipment_name"
+                  name="shipment_name"
+                  value={formData.shipment_name || ''}
+                  onChange={handleChange}
+                  placeholder="Enter shipment name"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+
+            <div className="mb-6">
+              <label htmlFor="customer_delivery_address" className="block text-gray-700 font-medium mb-2">
+                Customer Delivery Address
+              </label>
+              <textarea
+                id="customer_delivery_address"
+                name="customer_delivery_address"
+                rows={3}
+                value={formData.customer_delivery_address || ''}
+                onChange={handleChange}
+                placeholder="Enter customer delivery address"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              ></textarea>
+            </div>
+
+            <div className="mb-6">
+              <label htmlFor="shipment_notes" className="block text-gray-700 font-medium mb-2">
+                Shipment Notes <span className="text-gray-500 text-sm">(Optional)</span>
+              </label>
+              <textarea
+                id="shipment_notes"
+                name="shipment_notes"
+                rows={4}
+                value={formData.shipment_notes || ''}
+                onChange={handleChange}
+                placeholder="Enter any important notes about the shipment, such as special handling instructions, customs information, or delivery preferences"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              ></textarea>
+              <p className="text-xs text-gray-500 mt-1">
+                Add any additional information that might be helpful for tracking or handling this shipment
+              </p>
+            </div>
+          </div>
+          
+          <div className="border-t pt-4 mt-6">
+            <h3 className="text-lg font-medium mb-3">Contact Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label htmlFor="shipper_name" className="block text-gray-700 font-medium mb-2">
+                  Shipper Name
+                </label>
+                <input
+                  type="text"
+                  id="shipper_name"
+                  name="shipper_name"
+                  value={formData.shipper_name || ''}
+                  onChange={handleChange}
+                  placeholder="Enter shipper name"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="shipper_address" className="block text-gray-700 font-medium mb-2">
+                  Shipper Address
+                </label>
+                <textarea
+                  id="shipper_address"
+                  name="shipper_address"
+                  rows={3}
+                  value={formData.shipper_address || ''}
+                  onChange={handleChange}
+                  placeholder="Enter shipper address"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label htmlFor="buyer_name" className="block text-gray-700 font-medium mb-2">
+                  Buyer Name
+                </label>
+                <input
+                  type="text"
+                  id="buyer_name"
+                  name="buyer_name"
+                  value={formData.buyer_name || ''}
+                  onChange={handleChange}
+                  placeholder="Enter buyer name"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="buyer_address" className="block text-gray-700 font-medium mb-2">
+                  Buyer Address
+                </label>
+                <textarea
+                  id="buyer_address"
+                  name="buyer_address"
+                  rows={3}
+                  value={formData.buyer_address || ''}
+                  onChange={handleChange}
+                  placeholder="Enter buyer address"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t pt-4 mt-6">
             <h3 className="text-lg font-medium mb-3">Package Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
@@ -482,21 +785,24 @@ export default function NewShipment() {
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              
+
               <div>
-                <label htmlFor="declared_value" className="block text-gray-700 font-medium mb-2">
-                  Declared Value (USD)
+                <label htmlFor="hs_code" className="block text-gray-700 font-medium mb-2">
+                  HS Code <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="number"
-                  id="declared_value"
-                  name="declared_value"
-                  step="0.01"
-                  min="0"
-                  value={formData.declared_value || ''}
+                  type="text"
+                  id="hs_code"
+                  name="hs_code"
+                  required
+                  pattern="[0-9]{8}"
+                  maxLength={8}
+                  value={formData.hs_code || ''}
                   onChange={handleChange}
+                  placeholder="Enter 8-digit HS Code"
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <p className="text-xs text-gray-500 mt-1">Must be exactly 8 digits</p>
               </div>
             </div>
             
@@ -517,47 +823,100 @@ export default function NewShipment() {
           </div>
           
           <div className="border-t pt-4 mt-6">
-            <h3 className="text-lg font-medium mb-3">Upload Media for Shipment Stages</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              You can upload media for each stage of the shipment. Media will only be visible when the shipment is at that specific stage.
-            </p>
+            <h3 className="text-lg font-medium mb-3">Shipment Files</h3>
             
-            <div className="border rounded-md p-4 mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-medium">{formData.status} (Current Stage)</h4>
-                <span className="transform transition-transform">▲</span>
+            {/* Uploaded Files */}
+            {uploadedFiles.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Added Files:</h4>
+                <ul className="space-y-2">
+                  {uploadedFiles.map((file) => (
+                    <li key={file.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">{file.file_name}</span>
+                        <span className="text-xs text-gray-500">
+                          ({(file.file_size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <a
+                          href={file.public_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          View
+                        </a>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              
-              <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload Document or Image
+            )}
+
+            {/* Upload New Files */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Upload New Files:</h4>
+              <div className="flex items-center space-x-2">
+                <label className="px-4 py-2 bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700">
+                  <span>Select Files</span>
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    multiple
+                    onChange={handleFileSelect}
+                  />
                 </label>
-                <div className="flex items-center space-x-2">
-                  <label className="px-4 py-2 bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700">
-                    <span>Select Image</span>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files[0]) {
-                          setSelectedFile(e.target.files[0]);
-                        }
-                      }}
-                    />
-                  </label>
-                  <span className="text-sm text-gray-600">
-                    {selectedFile ? selectedFile.name : 'No file selected'}
-                  </span>
+                <span className="text-sm text-gray-600">
+                  {selectedFiles.length > 0 
+                    ? `${selectedFiles.length} file(s) selected` 
+                    : 'No files selected'}
+                </span>
+              </div>
+
+              {selectedFiles.length > 0 && (
+                <div className="mt-4">
+                  <h5 className="text-sm font-medium text-gray-700 mb-2">Selected Files:</h5>
+                  <ul className="space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">{file.name}</span>
+                          <span className="text-xs text-gray-500">
+                            ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {file.type.startsWith('image/') ? (
+                            <a
+                              href={filePreviews[file.name]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              View
+                            </a>
+                          ) : (
+                            <a
+                              href={filePreviews[file.name]}
+                              download={file.name}
+                              className="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              Download
+                            </a>
+                          )}
+                          <button
+                            onClick={() => removeFile(file.name)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-            </div>
-            
-            <div className="border rounded-md p-4 cursor-pointer">
-              <div className="flex justify-between items-center">
-                <h4 className="font-medium">Upload Media for Other Stages</h4>
-                <span className="transform transition-transform">▼</span>
-              </div>
+              )}
             </div>
           </div>
           

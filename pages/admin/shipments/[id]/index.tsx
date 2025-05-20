@@ -49,17 +49,14 @@ export default function ViewShipment() {
         </div>
       ) : (
         <>
-          <div className="mb-6 flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Shipment Details</h1>
-            <div className="space-x-2">
-              <Link href="/admin/shipments" className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
-                Back to Shipments
-              </Link>
-              <Link href={`/admin/shipments/${id}/edit`} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Shipment Details</h1>
+            <div className="flex space-x-4">
+              <Link
+                href={`/admin/shipments/${shipment.id}/edit`}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              >
                 Edit Shipment
-              </Link>
-              <Link href={`/admin/shipments/${id}/media`} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md ml-2">
-                Manage Media
               </Link>
             </div>
           </div>

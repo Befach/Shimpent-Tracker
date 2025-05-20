@@ -33,7 +33,7 @@ export default function Dashboard() {
       const { count: activeCount, error: activeError } = await supabase
         .from('shipments')
         .select('*', { count: 'exact', head: true })
-        .not('status', 'eq', 'Dispatched to Customer Warehouse');
+        .not('status', 'eq', 'Dispatch to Customer Warehouse');
       
       if (activeError) throw activeError;
       
@@ -41,7 +41,7 @@ export default function Dashboard() {
       const { count: deliveredCount, error: deliveredError } = await supabase
         .from('shipments')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'Dispatched to Customer Warehouse');
+        .eq('status', 'Dispatch to Customer Warehouse');
       
       if (deliveredError) throw deliveredError;
       
@@ -147,6 +147,9 @@ export default function Dashboard() {
                       Tracking ID
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Shipment Name
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Origin
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -175,6 +178,9 @@ export default function Dashboard() {
                       <tr key={shipment.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{shipment.tracking_id}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{shipment.shipment_name || 'N/A'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{shipment.origin_city}, {shipment.origin_country}</div>

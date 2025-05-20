@@ -2,15 +2,15 @@ import React from 'react';
 
 // Define the stages in order
 const SHIPMENT_STAGES = [
-  'Product Insurance Completed',
-  'Supplier Payment Processed',
-  'Awaiting Packaging Approval from Customer',
-  'Pickup Completed at Origin',
+  'Product Insurance',
+  'Supplier Payment',
+  'Packaging Approval from Customer',
+  'Pickup at Origin',
   'In Transit to India',
   'Pending Customer Clearance',
-  'Customs Clearance Completed',
-  'Dispatched to Befach Warehouse',
-  'Dispatched to Customer Warehouse'
+  'Customs Clearance',
+  'Dispatch to Befach Warehouse',
+  'Dispatch to Customer Warehouse'
 ];
 
 interface ShipmentTimelineProps {
