@@ -5,6 +5,10 @@ on:
     branches:
       - main  # or your default branch name
 
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
