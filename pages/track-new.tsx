@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
-import supabase from '../lib/supabaseInstance';
+import { supabase } from '../lib/supabase';
 import MainNav from '../components/MainNav';
 import { FaShip, FaPlane, FaTruck, FaTrain, FaFileAlt, FaDownload, FaBox, FaCube, FaImage, FaFile, FaFilePdf, FaFileWord, FaFileExcel, FaSearch, FaArrowLeft, FaChevronUp, FaChevronDown, FaEye } from 'react-icons/fa';
 
@@ -67,18 +67,18 @@ const TrackNewPage: NextPage = () => {
     try {
       console.log('Searching for tracking ID:', trackingId);
       
-      // Simple query with no joins
+      // Use maybeSingle() instead of single() to handle no results gracefully
       const { data, error: shipmentError } = await supabase
         .from('shipments')
         .select('*')
         .eq('tracking_id', trackingId)
-        .single();
+        .maybeSingle();
       
       console.log('Query result:', { data, error: shipmentError });
       
       if (shipmentError) {
         console.error('Error fetching shipment:', shipmentError);
-        setError(`Error: ${shipmentError.message}`);
+        setError('Failed to track shipment. Please try again.');
         return;
       }
       
