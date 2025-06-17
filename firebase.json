@@ -9,6 +9,43 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/admin/**",
+        "destination": "/admin.html"
+      },
+      {
+        "source": "/track/**",
+        "destination": "/track.html"
+      },
+      {
+        "source": "/track-new/**",
+        "destination": "/track-new.html"
+      },
+      {
+        "source": "/track-simple/**",
+        "destination": "/track-simple.html"
+      },
+      {
+        "source": "/track-enhanced/**",
+        "destination": "/track-enhanced.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
     ]
   }
 }
