@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaUpload, FaEye, FaTrash, FaFile, FaFilePdf, FaFileWord, FaFileExcel, FaFileImage } from 'react-icons/fa';
-import supabase from '../lib/supabaseInstance';
+import { supabase } from '../lib/supabase';
 
 type UploadedFile = {
   id: number;

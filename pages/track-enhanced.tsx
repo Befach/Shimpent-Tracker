@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
-import supabase from '../lib/supabaseInstance';
+import { useRouter } from 'next/router';
+import { supabase } from '../lib/supabase';
 import { FaCheckCircle, FaCircle, FaPhone, FaComment, FaTruck, FaPlane, FaShip, FaTrain } from 'react-icons/fa';
 import MainNav from '../components/MainNav';
 

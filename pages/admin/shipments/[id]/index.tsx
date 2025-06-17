@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import ClientOnlyAdmin from '../../../../components/ClientOnlyAdmin';
-import supabase from '../../../../lib/supabaseInstance';
+import { supabase } from '../../../../lib/supabase';
 import Link from 'next/link';
 
 export default function ViewShipment() {

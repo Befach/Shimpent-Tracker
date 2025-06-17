@@ -588,11 +588,6 @@ const TrackNewPage: NextPage = () => {
                                     Dispatched through: {shipment.transit_dispatched_through}
                                   </p>
                                 )}
-                                {stage === 'Dispatch to Befach Warehouse' && shipment.befach_dispatched_through && (
-                                  <p className="text-sm text-blue-600 mt-1">
-                                    Dispatched through: {shipment.befach_dispatched_through}
-                                  </p>
-                                )}
                                 {stage === 'Dispatch to Customer Warehouse' && shipment.customer_dispatched_through && (
                                   <p className="text-sm text-blue-600 mt-1">
                                     Dispatched through: {shipment.customer_dispatched_through}

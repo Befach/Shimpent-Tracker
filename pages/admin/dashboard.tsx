@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ClientOnlyAdmin from '../../components/ClientOnlyAdmin';
-import supabase from '../../lib/supabaseInstance';
+import { supabase } from '../../lib/supabase';
 import { FaBox, FaShippingFast, FaCheckCircle } from 'react-icons/fa';
 
 export default function Dashboard() {

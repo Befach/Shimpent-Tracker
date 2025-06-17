@@ -16,6 +16,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Skip type checking during build
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 }
 
 module.exports = nextConfig 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import ClientOnlyAdmin from '../../../../components/ClientOnlyAdmin';
-import supabase from '../../../../lib/supabaseInstance';
+import { supabase } from '../../../../lib/supabase';
 import { useAuth } from '../../../../contexts/AuthContext';
 import Link from 'next/link';
 
@@ -31,14 +31,14 @@ const SHIPMENT_STAGES = [
 
   const [formData, setFormData] = useState({
     tracking_id: '',
-    origin_city: '',
     origin_country: '',
-    destination_city: '',
+    origin_city: '',
     destination_country: '',
+    destination_city: '',
     current_city: '',
     current_country: '',
-    status: 'Product Insurance Completed',
-    transport_mode: 'Air',
+    status: '',
+    transport_mode: '',
     estimated_delivery: '',
     package_count: 1,
     package_type: '',
@@ -47,7 +47,6 @@ const SHIPMENT_STAGES = [
     contents: '',
     pickup_dispatched_through: '',
     transit_dispatched_through: '',
-    befach_dispatched_through: '',
     customer_dispatched_through: '',
     hs_code: '',
     shipment_name: '',
@@ -101,7 +100,6 @@ const SHIPMENT_STAGES = [
           contents: data.contents || '',
         pickup_dispatched_through: data.pickup_dispatched_through || '',
         transit_dispatched_through: data.transit_dispatched_through || '',
-        befach_dispatched_through: data.befach_dispatched_through || '',
         customer_dispatched_through: data.customer_dispatched_through || '',
         hs_code: data.hs_code || '',
         shipment_name: data.shipment_name || '',
@@ -241,37 +239,39 @@ const SHIPMENT_STAGES = [
     setSuccess('');
 
     try {
-      const { error } = await supabase
-        .from('shipments')
-        .update({
+      // Prepare update data with proper type handling
+      const updateData = {
         tracking_id: formData.tracking_id,
         origin_country: formData.origin_country,
         origin_city: formData.origin_city,
         destination_country: formData.destination_country,
         destination_city: formData.destination_city,
-          current_location_country: formData.current_country,
-          current_location_city: formData.current_city,
+        current_location_country: formData.current_country,
+        current_location_city: formData.current_city,
         status: formData.status,
-          transport_mode: formData.transport_mode,
-        estimated_delivery: formData.estimated_delivery,
-          package_count: formData.package_count,
-          package_type: formData.package_type,
-          weight: formData.weight,
-          dimensions: formData.dimensions,
-          contents: formData.contents,
-          pickup_dispatched_through: formData.pickup_dispatched_through,
-          transit_dispatched_through: formData.transit_dispatched_through,
-          befach_dispatched_through: formData.befach_dispatched_through,
-          customer_dispatched_through: formData.customer_dispatched_through,
-          hs_code: formData.hs_code,
-          shipment_name: formData.shipment_name,
-          customer_delivery_address: formData.customer_delivery_address,
-          shipment_notes: formData.shipment_notes,
-          shipper_name: formData.shipper_name,
-          shipper_address: formData.shipper_address,
-          buyer_name: formData.buyer_name,
-          buyer_address: formData.buyer_address,
-        })
+        transport_mode: formData.transport_mode,
+        estimated_delivery: formData.estimated_delivery || null,
+        package_count: formData.package_count ? parseInt(formData.package_count) : 1,
+        package_type: formData.package_type || null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        dimensions: formData.dimensions || null,
+        contents: formData.contents || null,
+        pickup_dispatched_through: formData.pickup_dispatched_through || null,
+        transit_dispatched_through: formData.transit_dispatched_through || null,
+        customer_dispatched_through: formData.customer_dispatched_through || null,
+        hs_code: formData.hs_code || null,
+        shipment_name: formData.shipment_name || null,
+        customer_delivery_address: formData.customer_delivery_address || null,
+        shipment_notes: formData.shipment_notes || null,
+        shipper_name: formData.shipper_name || null,
+        shipper_address: formData.shipper_address || null,
+        buyer_name: formData.buyer_name || null,
+        buyer_address: formData.buyer_address || null,
+      };
+
+      const { error } = await supabase
+        .from('shipments')
+        .update(updateData)
         .eq('id', id);
       
       if (error) throw error;
@@ -572,21 +572,6 @@ const SHIPMENT_STAGES = [
                   id="transit_dispatched_through"
                   name="transit_dispatched_through"
                   value={formData.transit_dispatched_through || ''}
-                    onChange={handleChange}
-                  placeholder="e.g. Blue Dart, FedEx, DHL"
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                <label htmlFor="befach_dispatched_through" className="block text-gray-700 font-medium mb-2">
-                  Befach Warehouse Dispatched Through
-                  </label>
-                  <input
-                    type="text"
-                  id="befach_dispatched_through"
-                  name="befach_dispatched_through"
-                  value={formData.befach_dispatched_through || ''}
                     onChange={handleChange}
                   placeholder="e.g. Blue Dart, FedEx, DHL"
                     className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

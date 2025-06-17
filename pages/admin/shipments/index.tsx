@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ClientOnlyAdmin from '../../../components/ClientOnlyAdmin';
-import supabase from '../../../lib/supabaseInstance';
 import { useRouter } from 'next/router';
+import { supabase } from '../../../lib/supabase';
 
 export default function ShipmentsIndex() {
   const [shipments, setShipments] = useState([]);

@@ -16,7 +16,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "target": "ES2017"
+    "target": "ES2017",
+    "tsBuildInfoFile": ".tsbuildinfo"
   },
   "include": [
     "next-env.d.ts",
@@ -24,6 +25,8 @@
     "**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next",
+    "out"
   ]
 }

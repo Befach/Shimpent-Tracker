@@ -1,89 +1,89 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Befach International - Track Shipment</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
-    <!-- Header -->
-    <header>
-        <div class="container header-container">
-            <div class="logo">
-                <img src="logo.png" alt="Befach International Logo">
-                <div class="logo-text">
-                    <span class="logo-name">BEFACH</span>
-                    <span class="logo-tagline">INTERNATIONAL</span>
-                </div>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#" class="active">Track Shipment</a></li>
-                    <li><a href="#">Admin</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Firebase Hosting</title>
 
-    <!-- Main Content -->
-    <main>
-        <div class="container">
-            <h1>Track Your Shipment</h1>
-            <p class="subtitle">Enter your tracking number to get real-time updates on your shipment.</p>
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/11.7.3/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/11.7.3/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/11.7.3/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/11.7.3/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/11.7.3/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/11.7.3/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/11.7.3/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/11.7.3/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/11.7.3/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/11.7.3/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
-            <div class="tracking-card">
-                <h2>Track Shipment</h2>
-                <p>Enter your tracking number below</p>
-                <div class="tracking-form">
-                    <input type="text" placeholder="Enter tracking number">
-                    <button class="track-btn">Track</button>
-                </div>
-            </div>
+    <style media="screen">
+      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
+      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
+      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
+      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
+      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
+      @media (max-width: 600px) {
+        body, #message { margin-top: 0; background: white; box-shadow: none; }
+        body { border-top: 16px solid #ffa100; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="message">
+      <h2>Welcome</h2>
+      <h1>Firebase Hosting Setup Complete</h1>
+      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
+      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+    </div>
+    <p id="load">Firebase SDK Loading&hellip;</p>
 
-            <div class="features">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <h3>Real-Time Tracking</h3>
-                    <p>Get instant updates on your shipment status with our real-time tracking system.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <h3>Detailed Timeline</h3>
-                    <p>View the complete journey of your shipment with our detailed timeline feature.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-file-alt"></i>
-                    </div>
-                    <h3>Shipment Documents</h3>
-                    <p>Access all your shipment documents in one place, including packing lists and invoices.</p>
-                </div>
-            </div>
-        </div>
-    </main>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const loadEl = document.querySelector('#load');
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        // // The Firebase SDK is initialized and available here!
+        //
+        // firebase.auth().onAuthStateChanged(user => { });
+        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+        // firebase.firestore().doc('/foo/bar').get().then(() => { });
+        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
+        // firebase.messaging().requestPermission().then(() => { });
+        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+        // firebase.analytics(); // call to activate
+        // firebase.analytics().logEvent('tutorial_completed');
+        // firebase.performance(); // call to activate
+        //
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-logo">
-                <span class="logo-name">BEFACH</span>
-                <span class="logo-tagline">INTERNATIONAL</span>
-            </div>
-            <div class="copyright">
-                © 2025 Befach International. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <script src="script.js"></script>
-</body>
-</html> 
+        try {
+          let app = firebase.app();
+          let features = [
+            'auth', 
+            'database', 
+            'firestore',
+            'functions',
+            'messaging', 
+            'storage', 
+            'analytics', 
+            'remoteConfig',
+            'performance',
+          ].filter(feature => typeof app[feature] === 'function');
+          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
+        } catch (e) {
+          console.error(e);
+          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+        }
+      });
+    </script>
+  </body>
+</html>
